@@ -119,7 +119,7 @@ Para melhor compreensão dos fenômenos, foram analisadas representações gráf
 
 Diagrama de polos no plano complexo.
 
-![Diagrama de polos](imagens\diagrama_polos.png)
+![Diagrama de polos](imagens/diagrama_polos.png)
 
 Na figura acima, podemos observar que os polos localizados no semiplano esquerdo σ < 0 resultam em sistemas estáveis, enquanto polos no semiplano direito σ > 0 indicam instabilidade. Polos complexos conjugados introduzem comportamento oscilatório, evidenciando a influência da parte imaginária na dinâmica do sistema.
 
@@ -157,7 +157,7 @@ plt.show()
 
 Resposta ao degrau de um sistema de primeira ordem.
 
-![sistema de primeira ordem](imagens\degrau-sis-ordem-1.png)
+![sistema de primeira ordem](imagens/degrau-sis-ordem-1.png)
 
 A resposta apresenta comportamento exponencial crescente até o regime permanente. A constante de tempo pode ser observada como o instante em que a resposta atinge aproximadamente 63% do valor final, evidenciando a relação direta entre o polo do sistema e a velocidade da resposta.
 
@@ -187,7 +187,7 @@ plt.show()
 
 Resposta ao degrau para diferentes fatores de amortecimento.
 
-![Resposta ao degrau](imagens\resposta-deg-2-ordem.png)
+![Resposta ao degrau](imagens/resposta-deg-2-ordem.png)
 
 Observa-se que o fator de amortecimento ζ influencia diretamente o comportamento do sistema. Para ζ < 1, a resposta apresenta oscilações com overshoot, caracterizando um sistema subamortecido. Para ζ = 1, obtém-se a resposta criticamente amortecida, sendo a mais rápida sem ultrapassagem. Já para ζ > 1, o sistema torna-se superamortecido, apresentando resposta mais lenta e sem oscilações.
 
