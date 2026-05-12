@@ -219,7 +219,7 @@ No caso do circuito RLC modelado, a resistência ($R$) dita o fator de amortecim
 
 Para ilustrar fisicamente o impacto da variação paramétrica, geramos o mapa de polos de ambos os sistemas utilizando o comando `plzr()` no Scilab.
 
-![Mapa de Polos do Motor CC](imagens/mapa_polos_scilab.png)
+![Mapa de Polos do Motor CC](imagens/mapas_polos_scilab.png)
 
 **Análise do Diagrama:**
 A representação no plano complexo confirma a relação direta entre a posição das raízes do denominador e a velocidade da resposta temporal:
