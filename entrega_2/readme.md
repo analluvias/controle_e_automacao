@@ -177,7 +177,7 @@ legend('Inércia Nominal (J=0.01)', 'Inércia Alta (J=0.1)', 4);
 O resultado da execução do script gerou o gráfico abaixo, ilustrando o comportamento da velocidade angular do motor ao longo do tempo.
 
 
-![Gráfico de Resposta ao Degrau do Motor CC](imagens/grafico_scilab.png)
+![Gráfico de Resposta ao Degrau do Motor CC](imagens/grafico_motorCC.png)
 ---
 
 ## 4. Discussão dos Resultados e Efeito da Variação de Parâmetros
