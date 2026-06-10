@@ -140,7 +140,7 @@ A Inteligência Artificial (IA) tem revolucionado a automação ao lidar com sis
 
 ---
 
-## 4.3 Integração IIoT e Computação de Borda (*Edge Computing*)
+## 4.3 Integração IoT e Computação de Borda (*Edge Computing*)
 
 Para que modelos avançados rodem de forma eficiente, a arquitetura clássica dos CLPs passou por reformulações. Através da Internet das Coisas Industrial (IIoT), protocolos de comunicação modernos (como o OPC UA e MQTT) permitem que os dados dos sensores fluam bidirecionalmente do chão de fábrica para plataformas em nuvem. 
 
