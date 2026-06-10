@@ -87,10 +87,10 @@ O trecho final do código demonstra uma prática comum na indústria: independen
 
 ## 3.2 Análise Prática: Discretização e Efeito Windup
 
-[cite_start]Durante a execução da simulação no OpenPLC Editor, dois fenômenos fundamentais da teoria de controle discreto foram observados na prática, evidenciando as nuances de se traduzir equações matemáticas contínuas para um ambiente digital baseado em microcontroladores e CLPs.
+Durante a execução da simulação no OpenPLC Editor, dois fenômenos fundamentais da teoria de controle discreto foram observados na prática, evidenciando as nuances de se traduzir equações matemáticas contínuas para um ambiente digital baseado em microcontroladores e CLPs.
 
 ### A Necessidade de Discretização e a Parametrização do Tempo de Amostragem ($T_s$)
-Inicialmente, a omissão ou parametrização incorreta do pino de tempo de ciclo resultou em um erro de indeterminação matemática (`NaN` - *Not a Number*). Na teoria de controle contínuo, as derivadas e integrais operam em um fluxo temporal ininterrupto. [cite_start]No entanto, sistemas digitais operam de forma discreta, amostrando sinais em intervalos periódicos. 
+Inicialmente, a omissão ou parametrização incorreta do pino de tempo de ciclo resultou em um erro de indeterminação matemática (`NaN` - *Not a Number*). Na teoria de controle contínuo, as derivadas e integrais operam em um fluxo temporal ininterrupto. No entanto, sistemas digitais operam de forma discreta, amostrando sinais em intervalos periódicos. 
 
 A ação derivativa calcula a taxa de variação do erro dividida pelo período de amostragem ($T_s$). Caso esse tempo seja nulo ou mal interpretado pelo compilador (como um operando decimal comum ao invés do tipo de dado estruturado `TIME`), ocorre uma divisão por zero. A correção exigiu a especificação rigorosa do tempo de ciclo através da sintaxe padrão da norma IEC 61131-3 (utilizando `CYCLE := T#20ms`), forçando o bloco a sincronizar sua matemática com o ciclo real de varredura (*scan cycle*) da CPU do CLP.
 
@@ -103,16 +103,16 @@ Esse comportamento ilustra o fenômeno do **Integral Windup** (Saturação da In
 
 # 4. Tópicos Avançados em Controle e Automação
 
-[cite_start]Em conformidade com as diretrizes de pesquisa desta etapa, investigou-se a integração das malhas de controle clássicas com abordagens modernas de engenharia, fundamentais para a evolução da Automação Industrial e os pilares da Indústria 4.0.
+Em conformidade com as diretrizes de pesquisa desta etapa, investigou-se a integração das malhas de controle clássicas com abordagens modernas de engenharia, fundamentais para a evolução da Automação Industrial e os pilares da Indústria 4.0.
 
 ## 4.1 Controle Preditivo Baseado em Modelo (MPC)
-[cite_start]Diferente do controlador PID clássico, que opera de forma puramente reativa com base em erros passados (ação integral) e presentes (ação proporcional), o Controle Preditivo Baseado em Modelo (MPC) atua de forma proativa. [cite_start]O MPC utiliza um modelo matemático explícito do sistema dinâmico para prever o comportamento futuro da variável de processo ao longo de um horizonte de predição temporal e, a partir disso, otimizar as ações de controle atuais.
+Diferente do controlador PID clássico, que opera de forma puramente reativa com base em erros passados (ação integral) e presentes (ação proporcional), o Controle Preditivo Baseado em Modelo (MPC) atua de forma proativa. O MPC utiliza um modelo matemático explícito do sistema dinâmico para prever o comportamento futuro da variável de processo ao longo de um horizonte de predição temporal e, a partir disso, otimizar as ações de controle atuais.
 
 A estratégia de controle do MPC resolve, a cada passo de amostragem, um problema de otimização numérica em tempo real que minimiza uma função de custo ($J$):
 
 $$J = \sum_{i=1}^{H_p} \| y(k+i|k) - r(k+i) \|_{Q}^2 + \sum_{i=0}^{H_c-1} \| \Delta u(k+i|k) \|_{R}^2$$
 
-Onde $H_p$ representa o horizonte de predição, $H_c$ o horizonte de controle, $y$ a saída prevista, $r$ a referência e $\Delta u$ o esforço do atuador. Os pesos $Q$ e $R$ equilibram o rigor no rastreamento do alvo e a suavidade das ações de controle. [cite_start]O MPC destaca-se amplamente em indústrias de larga escala (como refinarias e plantas químicas) devido à sua capacidade nativa de gerenciar sistemas multivariáveis ($MIMO$) complexos e respeitar restrições físicas e operacionais rígidas simultaneamente.
+Onde $H_p$ representa o horizonte de predição, $H_c$ o horizonte de controle, $y$ a saída prevista, $r$ a referência e $\Delta u$ o esforço do atuador. Os pesos $Q$ e $R$ equilibram o rigor no rastreamento do alvo e a suavidade das ações de controle. O MPC destaca-se amplamente em indústrias de larga escala (como refinarias e plantas químicas) devido à sua capacidade nativa de gerenciar sistemas multivariáveis ($MIMO$) complexos e respeitar restrições físicas e operacionais rígidas simultaneamente.
 
 ## 4.2 Aplicações de Inteligência Artificial em Controle e Automação
 A incorporação de técnicas de Inteligência Artificial (IA) expande a flexibilidade e a autonomia dos sistemas industriais:
@@ -126,6 +126,6 @@ A incorporação de técnicas de Inteligência Artificial (IA) expande a flexibi
 
 O desenvolvimento completo deste estudo dirigido — progredindo linearmente desde a análise matemática abstrata até os desafios práticos da automação industrial — consolidou a visão de que os sistemas de controle modernos dependem de uma infraestrutura fortemente integrada e interdisciplinar.
 
-Enquanto as Etapas 1 e 2 forneceram as ferramentas analíticas para mapear a estabilidade por meio de funções de transferência e diagramas de polos, e a Etapa 3 detalhou as ações do controlador PID, esta quarta etapa coroou o aprendizado ao transpor esses conceitos para a realidade do chão de fábrica. [cite_start]A simulação prática em Texto Estruturado revelou que uma malha de controle real não está sujeita apenas a modelos teóricos perfeitos, mas também a restrições de hardware fundamentais, tais como a discretização temporal imposta pelo ciclo de varredura (*scan cycle*) da CPU, a tipagem e resolução dos dados, as limitações físicas dos atuadores e a necessidade imperativa de lógicas de segurança e intertravamentos.
+Enquanto as Etapas 1 e 2 forneceram as ferramentas analíticas para mapear a estabilidade por meio de funções de transferência e diagramas de polos, e a Etapa 3 detalhou as ações do controlador PID, esta quarta etapa coroou o aprendizado ao transpor esses conceitos para a realidade do chão de fábrica. A simulação prática em Texto Estruturado revelou que uma malha de controle real não está sujeita apenas a modelos teóricos perfeitos, mas também a restrições de hardware fundamentais, tais como a discretização temporal imposta pelo ciclo de varredura (*scan cycle*) da CPU, a tipagem e resolução dos dados, as limitações físicas dos atuadores e a necessidade imperativa de lógicas de segurança e intertravamentos.
 
-Portanto, conclui-se que o sucesso de um projeto de automação exige o domínio conjunto de duas vertentes: a precisão científica do projeto do controlador e a robustez tecnológica da engenharia de aplicação. [cite_start]Compreender essa sinergia estabelece a base de conhecimento necessária para projetar, simular e implantar sistemas industriais eficientes, seguros e alinhados às demandas tecnológicas contemporâneas.
+Portanto, conclui-se que o sucesso de um projeto de automação exige o domínio conjunto de duas vertentes: a precisão científica do projeto do controlador e a robustez tecnológica da engenharia de aplicação. Compreender essa sinergia estabelece a base de conhecimento necessária para projetar, simular e implantar sistemas industriais eficientes, seguros e alinhados às demandas tecnológicas contemporâneas.
