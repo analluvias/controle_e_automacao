@@ -83,8 +83,7 @@ A declaração das variáveis no OpenPLC seguiu a tipagem rigorosa exigida por C
 
 O trecho final do código demonstra uma prática comum na indústria: independentemente do cálculo matemático perfeito do PID, sistemas críticos precisam de lógicas de intertravamento. Caso o sensor de nível alto seja acionado, a saída para a válvula é forçada a 0.0 por segurança, sobrepondo o comando do controlador.
 
-print(1)
-
+![demonstração](imagens/demonstracao1.png)
 
 ## 3.2 Análise Prática: Discretização e Efeito Windup
 
