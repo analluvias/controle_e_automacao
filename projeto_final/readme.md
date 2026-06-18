@@ -166,7 +166,7 @@ t = 0:0.05:5;
 y = csim('step', t, H);
 ```
 
-![Resposta_temporal](/imagens/resposta_temporal.png)
+![Resposta_temporal](projeto_final/imagens/resposta_temporal.png)
 
 ### Representação Gráfica no Plano s (Mapa de Polos)
 
@@ -193,7 +193,7 @@ xtitle("Mapa de Polos da Planta", "Eixo Real (σ)", "Eixo Imaginário (jω)");
 
 ```
 
-![Resposta_temporal](/imagens/grafico_polos.png)
+![Resposta_temporal](projeto_final/imagens/grafico_polos.png)
 
 **Interpretação do Diagrama no Plano Complexo:**
 A execução deste script no Scilab gera um gráfico contendo uma marcação ("X") exatamente sobre o eixo real, na coordenada $\sigma = -1.25$. Esta representação gráfica comprova visualmente as premissas teóricas adotadas: o sistema possui estabilidade absoluta (polo no semiplano esquerdo) e ausência de oscilação natural (ausência de parte imaginária).
