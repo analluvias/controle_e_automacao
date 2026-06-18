@@ -280,7 +280,6 @@ void calcularPID()
         if(controle > 180) controle = 180;
     }
 }
-}
 ```
 
 ### Explicação
@@ -303,7 +302,7 @@ para reduzir erro e melhorar a estabilidade.
 
 ### Discussão do Controlador
 
-A sinergia entre as três ações confere ao PID uma robustez ímpar para lidar com perturbações reais.
+A combinação das três ações confere ao PID uma grande robustez para lidar com perturbações reais.
 
 A ação proporcional fornece rapidez de resposta. A ação integral elimina o erro estacionário. A ação derivativa melhora a estabilidade e reduz oscilações.
 
@@ -481,8 +480,6 @@ Diferente de arquiteturas antigas que dependiam de computadores centrais para c�
 
 ---
 
----
-
 # 9. Conclusão
 
 O desenvolvimento deste projeto permitiu aplicar de forma integrada os principais conceitos estudados na disciplina de Controle e Automação.
@@ -493,7 +490,7 @@ Posteriormente foi desenvolvido um controlador PID capaz de atuar sobre a planta
 
 Os resultados demonstraram que o controlador foi capaz de conduzir a saída ao valor de referência com estabilidade e erro permanente praticamente nulo. A resposta observada confirmou os fundamentos teóricos relacionados ao controle em malha fechada.
 
-Além disso, a transição do modelo teórico contínuo para o ambiente discreto digital evidenciou os desafios da engenharia real, como a necessidade rigorosa de amostragem temporal e o tratamento preventivo de saturações como o _Integral Windup_. A abordagem tecnológica do projeto tangenciou conceitos de ponta da Indústria 4.0, comprovando que a união entre a física de sistemas dinâmicos, o controle matemático e o processamento local de dados (_Edge Computing_) é o caminho definitivo para o desenvolvimento seguro e eficiente da automação industrial moderna.
+Além disso, a transição do modelo teórico contínuo para o ambiente discreto digital evidenciou os desafios da engenharia real, como a necessidade rigorosa de amostragem temporal e o tratamento preventivo de saturações como o _Integral Windup_. A abordagem tecnológica do projeto também envolveu conceitos da Indústria 4.0, comprovando que a união entre a física de sistemas dinâmicos, o controle matemático e o processamento local de dados (_Edge Computing_) é o caminho definitivo para o desenvolvimento seguro e eficiente da automação industrial moderna.
 
 Por fim, a implementação utilizando ESP32 mostrou que os conceitos estudados possuem aplicação prática direta em sistemas embarcados e industriais.
 
