@@ -8,11 +8,11 @@ O controlador PID é um dos algoritmos mais utilizados na indústria devido à s
 
 ### Aplicações Práticas
 
-* Controle de temperatura de fornos
-* Controle de velocidade de motores
-* Controle de posição de servomotores
-* Controle de nível de reservatórios
-* Controle de vazão em processos industriais
+- Controle de temperatura de fornos
+- Controle de velocidade de motores
+- Controle de posição de servomotores
+- Controle de nível de reservatórios
+- Controle de vazão em processos industriais
 
 ---
 
@@ -74,9 +74,9 @@ $$
 
 onde:
 
-* (u) = sinal de controle
-* $(\theta) =$ posição do sistema
-* $(\tau) =$ constante de tempo
+- (u) = sinal de controle
+- $(\theta) =$ posição do sistema
+- $(\tau) =$ constante de tempo
 
 Transformando para Laplace:
 
@@ -128,9 +128,9 @@ $$
 
 O sistema possui:
 
-* 1 polo real negativo
-* Resposta estável
-* Sem oscilações
+- 1 polo real negativo
+- Resposta estável
+- Sem oscilações
 
 ### Discussão dos Resultados
 
@@ -141,6 +141,73 @@ Sistemas de primeira ordem apresentam comportamento previsível e não possuem o
 ---
 
 # 5. Simulação Computacional
+
+## Simulação Contínua no Scilab
+
+Antes da implementação digital em linguagem C++, o comportamento teórico do sistema em malha fechada foi validado via simulação matemática no software Scilab. Isso permitiu prever a dinâmica exata da função de transferência de primeira ordem sem as limitações de hardware.
+
+```scilab
+// Parâmetros do sistema contínuo
+s = %s;
+tau = 0.8;
+G = syslin('c', 1, tau*s + 1);
+
+// Ganhos do PID
+Kp = 2.0;
+Ki = 0.3;
+Kd = 0.1;
+
+// Controlador PID e Malha Fechada
+C = syslin('c', Kd*s^2 + Kp*s + Ki, s);
+H = (C * G) /. 1;
+
+// Simulação de resposta ao degrau
+t = 0:0.05:5;
+y = csim('step', t, H);
+```
+
+![Resposta_temporal](/imagens/resposta_temporal.png)
+
+### Representação Gráfica no Plano s (Mapa de Polos)
+
+Para consolidar a análise matemática, o comportamento dinâmico do sistema foi validado visualmente através do mapeamento de seus polos no plano complexo (Plano $s$) utilizando a função nativa `plzr` do software Scilab. Esta técnica permite extrair as raízes do denominador da função de transferência de forma automatizada e plotá-las graficamente.
+
+O código a seguir gera o diagrama de polos para a planta modelada no projeto:
+
+```scilab
+// Variável complexa de Laplace
+s = %s;
+
+// Parâmetro da planta (constante de tempo)
+tau = 0.8;
+
+// Definição da Função de Transferência G(s) = 1 / (0.8s + 1)
+G = syslin('c', 1, tau*s + 1);
+
+// Limpa a janela gráfica e plota o Mapa de Polos e Zeros
+clf();
+plzr(G);
+
+// Configuração dos títulos do gráfico
+xtitle("Mapa de Polos da Planta", "Eixo Real (σ)", "Eixo Imaginário (jω)");
+
+```
+
+![Resposta_temporal](/imagens/grafico_polos.png)
+
+**Interpretação do Diagrama no Plano Complexo:**
+A execução deste script no Scilab gera um gráfico contendo uma marcação ("X") exatamente sobre o eixo real, na coordenada $\sigma = -1.25$. Esta representação gráfica comprova visualmente as premissas teóricas adotadas: o sistema possui estabilidade absoluta (polo no semiplano esquerdo) e ausência de oscilação natural (ausência de parte imaginária).
+
+### Transição para a Implementação Digital: Discretização e Limites Físicos
+
+A simulação contínua e o mapa de polos no Scilab validam o comportamento teórico ideal do sistema. No entanto, para embarcar esse controle no microcontrolador ESP32, é necessário traduzir o modelo matemático para o ambiente discreto digital.
+
+Essa transição exige a resolução de dois desafios práticos inerentes à automação industrial:
+
+- **Discretização Matemática:** Como os microcontroladores operam em ciclos de varredura periódicos, as equações diferenciais (tanto da dinâmica da planta quanto das ações integral e derivativa do PID) precisam ser solucionadas por métodos de aproximação numérica, como o Método de Euler. A variável `dt` no código atuará como o tempo de amostragem ($T_s$), garantindo a sincronia da matemática com o processador do hardware.
+- **Prevenção do Efeito Windup:** Enquanto o plano complexo e as equações contínuas aceitam valores infinitos, o atuador físico (servomotor) possui restrições mecânicas rígidas (opera apenas entre 0° e 180°). Sem as devidas travas no código, o limite físico causaria o acúmulo irreal de erro no controlador, gerando o fenômeno de saturação _Integral Windup_.
+
+Os blocos de código a seguir demonstram como essas adaptações da teoria para a prática foram implementadas em linguagem C++.
 
 ## Código Completo da Planta
 
@@ -204,11 +271,15 @@ void calcularPID()
 
     erroAnterior = erro;
 
-    if(controle < 0)
+    // Lógica de Segurança (Intertravamento)
+    if (posicao >= 175) {
         controle = 0;
-
-    if(controle > 180)
-        controle = 180;
+        integral = 0;
+    } else {
+        if(controle < 0) controle = 0;
+        if(controle > 180) controle = 180;
+    }
+}
 }
 ```
 
@@ -224,15 +295,15 @@ A parcela proporcional atua diretamente sobre o erro instantâneo. A parcela int
 
 O PID combina:
 
-* Ação proporcional
-* Ação integral
-* Ação derivativa
+- Ação proporcional
+- Ação integral
+- Ação derivativa
 
 para reduzir erro e melhorar a estabilidade.
 
 ### Discussão do Controlador
 
-A combinação das três ações torna o PID um dos controladores mais utilizados na indústria.
+A sinergia entre as três ações confere ao PID uma robustez ímpar para lidar com perturbações reais.
 
 A ação proporcional fornece rapidez de resposta. A ação integral elimina o erro estacionário. A ação derivativa melhora a estabilidade e reduz oscilações.
 
@@ -258,10 +329,10 @@ Após a aplicação do degrau, espera-se que a saída acompanhe progressivamente
 
 Idealmente, a resposta deve apresentar:
 
-* Tempo de subida reduzido;
-* Pequeno sobresinal;
-* Tempo de acomodação curto;
-* Erro de regime permanente próximo de zero.
+- Tempo de subida reduzido;
+- Pequeno sobresinal;
+- Tempo de acomodação curto;
+- Erro de regime permanente próximo de zero.
 
 Essas características indicam um sistema estável e adequadamente controlado.
 
@@ -271,10 +342,10 @@ Essas características indicam um sistema estável e adequadamente controlado.
 
 Observa-se que:
 
-* A saída aproxima-se gradualmente da referência;
-* O erro diminui ao longo do tempo;
-* O sistema permanece estável;
-* Não há oscilações significativas.
+- A saída aproxima-se gradualmente da referência;
+- O erro diminui ao longo do tempo;
+- O sistema permanece estável;
+- Não há oscilações significativas.
 
 Além dos aspectos qualitativos observados, verifica-se que o controlador foi capaz de eliminar o erro permanente introduzido pelo degrau de referência.
 
@@ -371,14 +442,12 @@ Essa arquitetura é amplamente utilizada em sistemas industriais, robótica, aut
 
 A lógica PID poderia ser implementada em CLPs industriais utilizando blocos funcionais PID presentes em softwares como:
 
-* Siemens TIA Portal
-* Rockwell Studio 5000
-* Schneider EcoStruxure
-* Codesys
+- Siemens TIA Portal
+- Rockwell Studio 5000
+- Schneider EcoStruxure
+- Codesys
 
 A utilização de CLPs permitiria a aplicação do mesmo princípio de controle em ambientes industriais reais, com maior robustez e confiabilidade operacional.
-
----
 
 ## Aplicações Industriais
 
@@ -400,6 +469,18 @@ Braços robóticos.
 
 Essas aplicações demonstram a ampla utilização dos controladores PID em processos industriais, evidenciando a relevância prática dos conceitos abordados neste trabalho.
 
+## Lógicas de Segurança e Intertravamento
+
+No ambiente de automação industrial, o cálculo matemático perfeito de um algoritmo PID não substitui a necessidade de proteção física. Operações críticas exigem intertravamentos de segurança. Em uma aplicação real baseada neste projeto, lógicas booleanas adicionais devem ser programadas para sobrepor a ação do PID caso o sistema detecte uma anomalia (como o servomotor superaquecendo ou atingindo posições de quebra mecânica), forçando imediatamente a saída a um estado seguro e limpando o acumulador da ação integral.
+
+## Tópicos Avançados: Edge Computing e Indústria 4.0
+
+A execução simultânea da lógica de controle PID e da simulação matemática da planta diretamente no processador do ESP32 (técnica de _Software-in-the-Loop_) reflete conceitos essenciais da Indústria 4.0, como o _Edge Computing_ (Computação de Borda).
+
+Diferente de arquiteturas antigas que dependiam de computadores centrais para cálculos matemáticos pesados, o uso de microcontroladores modernos e Controladores de Automação Programáveis (PACs) permite processar a dinâmica do sistema localmente, com latência mínima. Essa robustez computacional na borda da rede abre portas para integrações futuras com estratégias avançadas, como o Controle Preditivo Baseado em Modelo (MPC) e o uso de Redes Neurais para auto-sintonia (Auto-Tuning) do controlador PID.
+
+---
+
 ---
 
 # 9. Conclusão
@@ -411,6 +492,8 @@ Inicialmente foi realizada a modelagem matemática da planta, representada por u
 Posteriormente foi desenvolvido um controlador PID capaz de atuar sobre a planta simulada. Através da simulação computacional foi possível observar a resposta temporal do sistema diante de alterações na referência, analisando a evolução do erro e a capacidade de rastreamento do sinal desejado.
 
 Os resultados demonstraram que o controlador foi capaz de conduzir a saída ao valor de referência com estabilidade e erro permanente praticamente nulo. A resposta observada confirmou os fundamentos teóricos relacionados ao controle em malha fechada.
+
+Além disso, a transição do modelo teórico contínuo para o ambiente discreto digital evidenciou os desafios da engenharia real, como a necessidade rigorosa de amostragem temporal e o tratamento preventivo de saturações como o _Integral Windup_. A abordagem tecnológica do projeto tangenciou conceitos de ponta da Indústria 4.0, comprovando que a união entre a física de sistemas dinâmicos, o controle matemático e o processamento local de dados (_Edge Computing_) é o caminho definitivo para o desenvolvimento seguro e eficiente da automação industrial moderna.
 
 Por fim, a implementação utilizando ESP32 mostrou que os conceitos estudados possuem aplicação prática direta em sistemas embarcados e industriais.
 
