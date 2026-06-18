@@ -288,6 +288,137 @@ O controlador PID calcula continuamente o erro entre a referência e a posição
 
 A parcela proporcional atua diretamente sobre o erro instantâneo. A parcela integral acumula erros ao longo do tempo, eliminando erros permanentes. Já a parcela derivativa atua sobre a taxa de variação do erro, contribuindo para a redução de oscilações.
 
+## Implementação Completa no ESP32 (Software-in-the-Loop)
+
+Os blocos das funções da planta e do PID detalhados anteriormente foram integrados em um código principal para execução no microcontrolador ESP32. Além das lógicas matemáticas, este programa completo gerencia a interação física com o usuário, a temporização do processador e a exibição de dados locais.
+
+### 1. Bibliotecas e Interface Homem-Máquina (IHM)
+O sistema utiliza a biblioteca `ESP32Servo` para gerar o sinal PWM responsável por comandar o atuador físico. Simultaneamente, o conjunto de bibliotecas `Wire`, `Adafruit_GFX` e `Adafruit_SSD1306` gerencia o display OLED via protocolo I2C. Este display atua como a IHM local, um componente vital na automação industrial para o monitoramento em tempo real do *setpoint* (Referência), da variável de processo (Posição) e do Erro.
+
+### 2. Gerenciamento de Tempo Real (Cálculo do `dt`)
+Em sistemas digitais, o tempo de ciclo da CPU não é perfeitamente constante. Para garantir que as ações integral (área sob a curva do erro) e derivativa (taxa de variação no tempo) operem de forma precisa, o código não usa atrasos fixos. Em vez disso, ele calcula dinamicamente o intervalo de tempo exato (`dt`) decorrido entre cada iteração do processador utilizando a função nativa `millis()`. 
+
+### Código-Fonte Integrado (Wokwi)
+
+O código abaixo demonstra o ciclo completo de automação executado a cada varredura do microcontrolador:
+
+```cpp
+#include <ESP32Servo.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// ---------------- OLED ----------------
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// ---------------- Pinos ----------------
+const int potPin = 34;
+const int servoPin = 18;
+
+// ---------------- Servo ----------------
+Servo servo;
+
+// ---------------- PID ----------------
+float Kp = 1.2;
+float Ki = 0.02;
+float Kd = 0.4;
+
+// ---------------- Variáveis ----------------
+float referencia = 0;
+float posicao = 90;
+float erro = 0;
+float erroAnterior = 0;
+float integral = 0;
+float derivada = 0;
+unsigned long ultimoTempo = 0;
+
+void setup() {
+  Serial.begin(115200);
+
+  // OLED
+  Wire.begin(21,22);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED nao encontrado");
+    while(true);
+  }
+  display.clearDisplay();
+  display.display();
+
+  // Servo
+  servo.attach(servoPin);
+  servo.write(posicao);
+  ultimoTempo = millis();
+}
+
+void loop() {
+  // ---------------- Tempo ----------------
+  unsigned long tempoAtual = millis();
+  float dt = (tempoAtual - ultimoTempo) / 1000.0;
+  ultimoTempo = tempoAtual;
+
+  // Evita divisão por zero
+  if(dt <= 0) dt = 0.001;
+
+  // ---------------- Referência ----------------
+  int leitura = analogRead(potPin);
+  referencia = map(leitura, 0, 4095, 0, 180);
+
+  // ---------------- PID ----------------
+  erro = referencia - posicao;
+  integral = integral + erro * dt;
+  derivada = (erro - erroAnterior) / dt;
+  float controle = (Kp * erro) + (Ki * integral) + (Kd * derivada);
+  erroAnterior = erro;
+
+  // ---------------- Lógica de Segurança (Intertravamento) ----------------
+  // Se a posição atingir o limite crítico de 175 graus, aciona a segurança
+  if (posicao >= 175) {
+    controle = 0; // Corta o sinal de controle 
+    integral = 0; // Zera a memória do erro para evitar o efeito Windup
+  }
+
+  // ---------------- Planta Virtual ----------------
+  /* Sistema de primeira ordem: dθ/dt = (u - θ)/τ */
+  float tau = 0.8;
+  posicao = posicao + ((controle - posicao) / tau) * dt;
+  posicao = constrain(posicao, 0, 180);
+
+  // ---------------- Servo ----------------
+  servo.write((int)posicao);
+
+  // ---------------- OLED ----------------
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0,0);  display.println("CONTROLE PID");
+  display.setCursor(0,15); display.print("REF: "); display.print((int)referencia); display.println(" deg");
+  display.setCursor(0,30); display.print("POS: "); display.print((int)posicao); display.println(" deg");
+  display.setCursor(0,45); display.print("ERR: "); display.print((int)erro);
+  display.display();
+
+  // ---------------- Serial ----------------
+  Serial.print("REF="); Serial.print(referencia);
+  Serial.print(" POS="); Serial.print(posicao);
+  Serial.print(" ERR="); Serial.println(erro);
+
+  delay(20);
+}
+```
+![Simulacao_esp](imagens/simulacao_esp.png)
+
+### Explicação da Dinâmica do Ciclo de Automação
+
+O funcionamento da malha fechada digital segue o fluxo de dados industrial padrão:
+
+1. **Aquisição de Dados:** A leitura do conversor Analógico-Digital (pino 34) capta a posição do potenciômetro e converte o valor elétrico para o *setpoint* da escala mecânica (0° a 180°).
+2. **Ação de Controle e Intertravamento:** O erro atual alimenta a matemática do PID. A inclusão da trava de segurança demonstra o acionamento de um estado seguro, anulando a variável `controle` e limpando o acúmulo da variável `integral` em caso de sobreposição de limites físicos.
+3. **Planta Virtual e Atuação:** O sinal processado simula a física do motor. O resultado dessa simulação é constrito aos limites mecânicos e enviado ao pino 18 como um sinal PWM, movimentando o servomotor.
+4. **Telemetria:** O bloco de envio via protocolo UART envia o fluxo de dados para o computador, permitindo plotar os gráficos de rastreamento de referência e analisar o comportamento da planta em tempo real.
+
+
+
 ---
 
 ## Resumo Teórico
@@ -302,7 +433,7 @@ para reduzir erro e melhorar a estabilidade.
 
 ### Discussão do Controlador
 
-A combinação das três ações confere ao PID uma grande robustez para lidar com perturbações reais.
+A sinergia entre as três ações confere ao PID uma robustez ímpar para lidar com perturbações reais.
 
 A ação proporcional fornece rapidez de resposta. A ação integral elimina o erro estacionário. A ação derivativa melhora a estabilidade e reduz oscilações.
 
@@ -480,6 +611,8 @@ Diferente de arquiteturas antigas que dependiam de computadores centrais para c�
 
 ---
 
+---
+
 # 9. Conclusão
 
 O desenvolvimento deste projeto permitiu aplicar de forma integrada os principais conceitos estudados na disciplina de Controle e Automação.
@@ -490,7 +623,7 @@ Posteriormente foi desenvolvido um controlador PID capaz de atuar sobre a planta
 
 Os resultados demonstraram que o controlador foi capaz de conduzir a saída ao valor de referência com estabilidade e erro permanente praticamente nulo. A resposta observada confirmou os fundamentos teóricos relacionados ao controle em malha fechada.
 
-Além disso, a transição do modelo teórico contínuo para o ambiente discreto digital evidenciou os desafios da engenharia real, como a necessidade rigorosa de amostragem temporal e o tratamento preventivo de saturações como o _Integral Windup_. A abordagem tecnológica do projeto também envolveu conceitos da Indústria 4.0, comprovando que a união entre a física de sistemas dinâmicos, o controle matemático e o processamento local de dados (_Edge Computing_) é o caminho definitivo para o desenvolvimento seguro e eficiente da automação industrial moderna.
+Além disso, a transição do modelo teórico contínuo para o ambiente discreto digital evidenciou os desafios da engenharia real, como a necessidade rigorosa de amostragem temporal e o tratamento preventivo de saturações como o _Integral Windup_. A abordagem tecnológica do projeto tangenciou conceitos de ponta da Indústria 4.0, comprovando que a união entre a física de sistemas dinâmicos, o controle matemático e o processamento local de dados (_Edge Computing_) é o caminho definitivo para o desenvolvimento seguro e eficiente da automação industrial moderna.
 
 Por fim, a implementação utilizando ESP32 mostrou que os conceitos estudados possuem aplicação prática direta em sistemas embarcados e industriais.
 
